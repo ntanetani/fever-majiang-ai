@@ -1,5 +1,24 @@
 # 過去の思考ルーチン
 
+## 0600
+
+  - 0400 をベースに修正
+    - substr() → slice()
+    - Player
+      - select_fulou()
+      - select_gang()
+      - select_dapai()
+        - paishu_all() → get_paishu()
+      - eval_shoupai()
+      - eval_backtrack()
+        - 残り枚数の把握に Paishu を使うよう修正
+    - SuanPai
+      - 残り牌数をツモ可能な枚数をベースに計算する内部クラス Paishu を追加
+      - ツモ可能枚数インスタンス変数 _n_zimo に設定するよう修正
+        - zimo()
+          - _n_zimo を更新する処理を追加
+        - paishu_all() →  get_paishu() とし、Paishu のインスタンスを返すよう修正
+
 ## 0504
 [牌の危険度計算アルゴリズム(4)](https://blog.kobalab.net/entry/2021/11/22/071442)
   - SuanPai
