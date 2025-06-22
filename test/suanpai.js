@@ -139,14 +139,23 @@ suite('SuanPai', ()=>{
         });
     });
 
-    suite('paishu_all()', ()=>{
+    suite('get_paishu()', ()=>{
         let suanpai = init_suanpai({shoupai:'m456p406s999z1122',baopai:'z1'});
-        test('牌数を全て返すこと', function(){
-            assert.deepEqual(suanpai.paishu_all(),
-                            {m0:1,m1:4,m2:4,m3:4,m4:3,m5:2,m6:3,m7:4,m8:4,m9:4,
-                             p0:0,p1:4,p2:4,p3:4,p4:3,p5:3,p6:3,p7:4,p8:4,p9:4,
-                             s0:1,s1:4,s2:4,s3:4,s4:4,s5:3,s6:4,s7:4,s8:4,s9:1,
-                                  z1:1,z2:2,z3:4,z4:4,z5:4,z6:4,z7:4});
+        suanpai.zimo({ l: 0, p: 'z3' });
+        let real = {m0:1,m1:4,m2:4,m3:4,m4:3,m5:2,m6:3,m7:4,m8:4,m9:4,
+                    p0:0,p1:4,p2:4,p3:4,p4:3,p5:3,p6:3,p7:4,p8:4,p9:4,
+                    s0:1,s1:4,s2:4,s3:4,s4:4,s5:3,s6:4,s7:4,s8:4,s9:1,
+                         z1:1,z2:2,z3:3,z4:4,z5:4,z6:4,z7:4};
+        let paishu = suanpai.get_paishu();
+        test('見えていない牌数を得られること', function(){
+            for (let p of Object.keys(real)) {
+                assert.equal(paishu.val(p, 1), real[p], p);
+            }
+        });
+        test('ツモ可能な牌数を推定できること', function(){
+            assert.equal(paishu.val('m1'), real.m1 * 69 / 121);
+            assert.equal(paishu.pop('m1').val('m1'), (real.m1 - 1) * 68 / 120);
+            assert.equal(paishu.push('m1').val('m1'), real.m1 * 69 / 121);
         });
     });
 
