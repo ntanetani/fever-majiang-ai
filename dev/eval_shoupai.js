@@ -107,7 +107,7 @@ if (argv._[1]) {
     }
 }
 
-let paishu = player._suanpai.paishu_all();
+let paishu = player._suanpai.get_paishu();
 let n_xiangting = Majiang.Util.xiangting(player.shoupai);
 
 console.log(n_xiangting,
