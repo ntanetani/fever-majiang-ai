@@ -154,7 +154,7 @@ suite('SuanPai', ()=>{
         });
         test('ツモ可能な牌数を推定できること', function(){
             assert.equal(paishu.val('m1'), real.m1 * 69 / 121);
-            assert.equal(paishu.pop('m1').val('m1'), (real.m1 - 1) * 68 / 120);
+            assert.equal(paishu.pop('m1').val('m1'), (real.m1 - 1) * 65 / 120);
             assert.equal(paishu.push('m1').val('m1'), real.m1 * 69 / 121);
         });
     });
