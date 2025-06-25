@@ -1,9 +1,8 @@
 # 過去の思考ルーチン
 
-## 0600
+### 0600
 
   - 0400 をベースに修正
-    - substr() → slice()
     - Player
       - select_fulou()
       - select_gang()
