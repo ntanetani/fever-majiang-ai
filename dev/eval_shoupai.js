@@ -64,15 +64,19 @@ function get_fulou(player, shoupai, p, paishu) {
 
 const yargs = require('yargs');
 const argv = yargs
-    .usage('Usage: $0 牌姿/場風/自風/ドラ/赤牌有無 捨て牌...')
+    .usage('Usage: $0 牌姿/場風/自風/[+巡目]/ドラ/赤牌有無 [ 捨て牌... ]')
     .option('silent', { alias: 's', boolean: true })
     .option('legacy', { alias: 'l' })
     .demandCommand(1)
     .argv;
 
-let [ paistr,
-      zhuangfeng, menfeng, baopai, hongpai ] = (''+argv._[0]).split(/\//);
+let param = (''+argv._[0]).split(/\//);
+let paistr, zhuangfeng, menfeng, xun, baopai, hongpai;
+if (param[3] && param[3][0] == '+')
+        [ paistr, zhuangfeng, menfeng, xun, baopai, hongpai ] = param;
+else    [ paistr, zhuangfeng, menfeng, baopai, hongpai ] = param;
 
+xun = +xun || 5;
 baopai = (baopai||'').split(/,/);
 
 let legacy = argv.legacy ?? '';
@@ -107,6 +111,7 @@ if (argv._[1]) {
         }
     }
 }
+player._suanpai._n_zimo = 70 - (xun - 1) * 4 - (menfeng||0);
 
 let paishu = player._suanpai.get_paishu
                 ? player._suanpai.get_paishu()
