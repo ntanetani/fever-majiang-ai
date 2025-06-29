@@ -336,7 +336,7 @@ module.exports = class Player extends Majiang.Player {
                     info.push({
                         p: p.slice(0,2), n_xiangting: n_xiangting, ev: ev,
                         tingpai: tingpai, n_tingpai: n_tingpai,
-                        weixian: suan_weixian(p)
+                        weixian: anquan ? suan_weixian(p) : null
                     });
                 }
             }
@@ -364,7 +364,7 @@ module.exports = class Player extends Majiang.Player {
                     info.push({
                         p: p.slice(0,2), n_xiangting: n_xiangting + 1, ev: ev,
                         tingpai: tingpai, n_tingpai: n_tingpai,
-                        weixian: suan_weixian(p)
+                        weixian: anquan ? suan_weixian(p) : null
                     });
                 }
             }
