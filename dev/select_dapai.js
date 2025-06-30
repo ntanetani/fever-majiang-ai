@@ -357,7 +357,7 @@ const test_data = [
 
 suite('麻雀 定石「何切る」301選', function(){
     for (let t of test_data) {
-        test(`${t[0]}: ${t[1]}/${t[2]}/${t[3]}/+${t[4]}/${t[5]}`, function(){
+        test(`${t[0]}: ${t[1]}/${t[2]}/${t[3]}/${t[5]}/+${t[4]}`, function(){
             assert.equal(select_dapai(...t.slice(1,6)), t[6]);
         });
     }
