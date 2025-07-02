@@ -109,7 +109,7 @@ if (argv._[1]) {
         }
     }
 }
-player._suanpai._n_zimo = 70 - (xun - 1) * 4 - (menfeng||0);
+player._suanpai._n_zimo = 69 - (xun - 1) * 4 - (menfeng||0);
 
 let paishu = player._suanpai.get_paishu
                 ? player._suanpai.get_paishu()

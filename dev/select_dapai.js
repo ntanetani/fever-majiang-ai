@@ -33,7 +33,7 @@ function select_dapai(paistr, zhuangfeng, menfeng, xun, baopai) {
     player.qipai(qipai);
 
     if (player._suanpai)
-            player._suanpai._n_zimo = 70 - (xun - 1) * 4 - menfeng;
+            player._suanpai._n_zimo = 69 - (xun - 1) * 4 - menfeng;
 
     return player.select_gang() || player.select_dapai().substr(0,2);
 }
