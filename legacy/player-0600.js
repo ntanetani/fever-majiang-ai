@@ -298,7 +298,7 @@ module.exports = class Player extends Majiang.Player {
             return weixian;
         };
         let anquan, min = Infinity;
-        if (this._model.shoupai.find(s=>s.lizhi)) {
+        if (this._model.shoupai.find(s => s != this.shoupai && s.lizhi)) {
             for (let p of this.get_dapai(this.shoupai)) {
                 let weixian = suan_weixian(p);
                 if (weixian < min) {
