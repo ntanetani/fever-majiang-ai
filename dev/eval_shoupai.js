@@ -74,7 +74,7 @@ let xun, param = (''+argv._[0]).split(/\//);
 if (param.length && param[param.length - 1][0] == '+') xun = param.pop();
 let [ paistr, zhuangfeng, menfeng, baopai, hongpai ] = param;
 
-xun = +xun || 5;
+xun = +xun || 7;
 baopai = (baopai||'').split(/,/);
 
 let legacy = argv.legacy ?? '';
