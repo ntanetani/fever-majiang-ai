@@ -117,7 +117,11 @@ if (argv._[1]) {
 
     let l = 0;
     while (he.map(h=>h.length).find(l=>l)) {
-        if (! he[l].length) { l = (l + 1) % 4; continue }
+        if (! he[l].length) {
+            l = (l + 1) % 4;
+            if (player._suanpai._n_zimo) player._suanpai._n_zimo--;
+            continue;
+        }
         let [ p, m ] = he[l].shift().split(/,/);
         p = p.replace(/[\+\=\-]$/,'');
         if (argv.verbose) console.log(l, p, m||'');
