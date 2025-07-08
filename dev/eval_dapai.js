@@ -161,7 +161,7 @@ if (player.shoupai.get_dapai()) {
     if (player.shoupai.get_gang_mianzi()) m = player.select_gang(info);
     if (m) info.forEach(i=>{ if (i.m == m) i.selected = true });
     let p = player.select_dapai(info);
-    if (! m) info.forEach(i=>{ if (i.p == p) i.selected = true });
+    if (! m) info.forEach(i=>{ if (i.p == p.slice(0,2)) i.selected = true });
 
     for (let r of info.sort(cmp)) {
         console.log(
