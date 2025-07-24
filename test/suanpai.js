@@ -157,6 +157,10 @@ suite('SuanPai', ()=>{
             assert.equal(paishu.pop('m1').val('m1'), (real.m1 - 1) * 65 / 120);
             assert.equal(paishu.push('m1').val('m1'), real.m1 * 69 / 121);
         });
+        test('ツモが尽きたときは0を返すこと', ()=>{
+            paishu._n_zimo = 0;
+            assert.equal(paishu.val('m1'), 0);
+        });
     });
 
     suite('paijia(p)', ()=>{
