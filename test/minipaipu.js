@@ -267,4 +267,15 @@ suite('minipaipu', ()=>{
             assert.deepEqual(player.model.shoupai[3]._fulou, ['m456-','s222=']);
         });
     });
+
+    suite('後方互換性', ()=>{
+        test('0400以降のAIで使用可能なこと', ()=>{
+            const Player = require('../legacy/player-0400');
+            const player = new Player();
+            minipaipu(player, baseinfo('m349p23368s33788s7/0/3/z5'),
+                      heinfo('z7z4/z3s8z6*/z6z5z2/z3z4z2'));
+            assert.deepEqual(Object.keys(player._suanpai._dapai[0]).sort(),
+                             ['s8','z2','z3','z6']);
+        });
+    });
 });

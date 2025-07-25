@@ -29,6 +29,9 @@
     "nyc": "^17.1.0",
     "yargs": "^17.7.2"
   },
+  "nyc": {
+    "exclude": ["test","legacy"]
+  },
   "dependencies": {
     "@kobalab/majiang-core": "^1.3.2"
   }
