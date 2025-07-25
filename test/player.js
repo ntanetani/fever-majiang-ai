@@ -475,9 +475,10 @@ suite('Player', ()=>{
             player.dapai({l:0,p:'m4*'});
             assert.ok(player.select_fulou({l:0,p:'m4*'}), 'm34-5');
         });
-        test('リーチ者がいる場合、評価値500未満の副露テンパイにはとらない', ()=>{
+        test('リーチ者がいる場合、評価値250未満の副露テンパイにはとらない', ()=>{
             const player = init_player({shoupai:'m1135p678s788,z777=',
                                         menfeng:1});
+            player._suanpai._n_zimo -= 4 * 4;
             player.dapai({l:0,p:'s9*'});
             assert.ok(! player.select_fulou({l:0,p:'s9*'}));
         });
@@ -638,17 +639,20 @@ suite('Player', ()=>{
         test('愚形1シャンテン、安全牌なし → 押し', ()=>{
             const player = init_player({shoupai:'s2357s8,z777=,m123-,p456-',
                                         menfeng:1,baopai:'z2'});
+            player._suanpai._n_zimo -= 4 * 9;
             set_dapai(player, 2, ['m4','m5','m6','p4','p5','p6*']);
             assert.equal(player.select_dapai(), 's8_');
         });
-        test('好形2シャンテン、安全牌あり → 回し打ち', ()=>{
+        test('好形1シャンテン、安全牌あり → 回し打ち', ()=>{
             const player = init_player({shoupai:'m23344p2346s2355p8'});
+            player._suanpai._n_zimo -= 4 * 10;
             set_dapai(player, 2, ['s8*']);
             assert.equal(player.select_dapai(), 'p8_');
         });
         test('好形1シャンテン、安全牌なし → 押し', ()=>{
             const player = init_player({shoupai:'s2357s8,z777=,m123-,p406-',
                                         baopai:'z2'});
+            player._suanpai._n_zimo -= 4 * 7;
             set_dapai(player, 2, ['m4','m5','m6','p4','p5','p6*']);
             assert.equal(player.select_dapai(), 's8_');
         });
@@ -676,7 +680,7 @@ suite('Player', ()=>{
             set_dapai(player, 2, ['p5*']);
             assert.equal(player.select_dapai(), 's5*');
         });
-        test('リーチ者がいて自身がテンパイしても評価値200未満ならリーチしない', ()=>{
+        test('リーチ者がいて自身がテンパイしても評価値350未満ならリーチしない', ()=>{
             const player = init_player({shoupai:'m22345p123678s79z1',
                                         menfeng:1,baopai:'z1'});
             player.dapai({l:0,p:'s8'})
