@@ -844,31 +844,31 @@ suite('Player', ()=>{
         test('和了形の場合は打点を評価値とする', ()=>{
             const player = init_player({shoupai:'m123678p123s1388s2*',
                                         menfeng:1, baopai:'s9'});
-            let paishu = player._suanpai.paishu_all();
+            let paishu = player._suanpai.get_paishu();
             assert.equal(player.eval_shoupai(player.shoupai, paishu), 8000);
         });
         test('テンパイ形の場合は、和了打点×枚数 の総和を評価値とする', ()=>{
             const player = init_player({shoupai:'m123678p123s1388*',
                                         menfeng:1, baopai:'s9'});
-            let paishu = player._suanpai.paishu_all();
+            let paishu = player._suanpai.get_paishu();
             assert.equal(player.eval_shoupai(player.shoupai, paishu), 32000/12);
         });
         test('打牌可能な牌姿の場合は、打牌後の牌姿の評価値の最大値を評価値とする', ()=>{
             const player = init_player({shoupai:'m123678p123s13488',
                                         menfeng:1, baopai:'s9'});
-            let paishu = player._suanpai.paishu_all();
+            let paishu = player._suanpai.get_paishu();
             assert.equal(player.eval_shoupai(player.shoupai, paishu), 32000/12);
         });
         test('残り枚数0の牌は評価時に手牌に加えない', ()=>{
             const player = init_player({shoupai:'m34p123456s789z13z3',
                                         menfeng:1, baopai:'m0'});
-            let paishu = player._suanpai.paishu_all();
+            let paishu = player._suanpai.get_paishu();
             assert.equal(player.eval_shoupai(player.shoupai, paishu), 18900/12);
         });
         test('3シャンテン以上の場合は鳴きを考慮した待ち牌数を評価値とする', ()=>{
             const player = init_player({shoupai:'m569p4s5778z11335',
                                         menfeng:1, baopai:'s9'});
-            let paishu = player._suanpai.paishu_all();
+            let paishu = player._suanpai.get_paishu();
             assert.equal(player.eval_shoupai(player.shoupai, paishu), 61);
         });
     });
