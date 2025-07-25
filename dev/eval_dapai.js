@@ -6,14 +6,30 @@
 const Majiang = require('@kobalab/majiang-core');
 
 function weixian_all(player) {
-    const weixian = player._suanpai.suan_weixian_all(
-                                            player.shoupai._bingpai);
+    function suan_weixian_all() {
+        if (! player._model.shoupai.find(shoupai =>
+                        shoupai != player.shoupai && shoupai.lizhi)) return;
+        return function(p) {
+            let max = 0;
+            for (let l = 0; l < 4; l++) {
+                if (l == player._menfeng) continue;
+                if (! player._model.shoupai[l].lizhi) continue;
+                let w = player._suanpai.suan_weixian(p, l);
+                if (w > max) max = w;
+            }
+            return max;
+        }
+    }
+    const weixian = player._suanpai.suan_weixian_all
+                        ? player._suanpai.suan_weixian_all(
+                                            player.shoupai._bingpai)
+                        : suan_weixian_all();
     if (! weixian) return '-';
     let rv = {};
     for (let s of ['m','p','s','z']) {
         rv[s] = [];
-        for (let n = 1; n <= 9; n++) {
-            rv[s][n] = (weixian(s+n) * 10)|0;
+        for (let n = 1; n <= (s == 'z' ? 7 : 9); n++) {
+            rv[s][n] = + weixian(s+n).toFixed(2);
         }
     }
     return rv;
@@ -101,7 +117,11 @@ if (argv._[1]) {
 
     let l = 0;
     while (he.map(h=>h.length).find(l=>l)) {
-        if (! he[l].length) { l = (l + 1) % 4; continue }
+        if (! he[l].length) {
+            l = (l + 1) % 4;
+            if (player._suanpai._n_zimo) player._suanpai._n_zimo--;
+            continue;
+        }
         let [ p, m ] = he[l].shift().split(/,/);
         p = p.replace(/[\+\=\-]$/,'');
         if (argv.verbose) console.log(l, p, m||'');
@@ -115,6 +135,7 @@ if (argv._[1]) {
         else {
             player._suanpai.zimo({ l: l, p: p });
             player._suanpai.dapai({ l: l, p: p });
+            if (p.slice(-1) == '*') player._model.shoupai[l]._lizhi = true;
             dapai = { l: l, p: p };
         }
         if (m) {
@@ -144,7 +165,7 @@ if (player.shoupai.get_dapai()) {
     if (player.shoupai.get_gang_mianzi()) m = player.select_gang(info);
     if (m) info.forEach(i=>{ if (i.m == m) i.selected = true });
     let p = player.select_dapai(info);
-    if (! m) info.forEach(i=>{ if (i.p == p) i.selected = true });
+    if (! m) info.forEach(i=>{ if (i.p == p.slice(0,2)) i.selected = true });
 
     for (let r of info.sort(cmp)) {
         console.log(

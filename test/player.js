@@ -475,9 +475,10 @@ suite('Player', ()=>{
             player.dapai({l:0,p:'m4*'});
             assert.ok(player.select_fulou({l:0,p:'m4*'}), 'm34-5');
         });
-        test('リーチ者がいる場合、評価値500未満の副露テンパイにはとらない', ()=>{
+        test('リーチ者がいる場合、評価値250未満の副露テンパイにはとらない', ()=>{
             const player = init_player({shoupai:'m1135p678s788,z777=',
                                         menfeng:1});
+            player._suanpai._n_zimo -= 4 * 4;
             player.dapai({l:0,p:'s9*'});
             assert.ok(! player.select_fulou({l:0,p:'s9*'}));
         });
@@ -638,17 +639,20 @@ suite('Player', ()=>{
         test('愚形1シャンテン、安全牌なし → 押し', ()=>{
             const player = init_player({shoupai:'s2357s8,z777=,m123-,p456-',
                                         menfeng:1,baopai:'z2'});
+            player._suanpai._n_zimo -= 4 * 9;
             set_dapai(player, 2, ['m4','m5','m6','p4','p5','p6*']);
             assert.equal(player.select_dapai(), 's8_');
         });
-        test('好形2シャンテン、安全牌あり → 回し打ち', ()=>{
+        test('好形1シャンテン、安全牌あり → 回し打ち', ()=>{
             const player = init_player({shoupai:'m23344p2346s2355p8'});
+            player._suanpai._n_zimo -= 4 * 10;
             set_dapai(player, 2, ['s8*']);
             assert.equal(player.select_dapai(), 'p8_');
         });
         test('好形1シャンテン、安全牌なし → 押し', ()=>{
             const player = init_player({shoupai:'s2357s8,z777=,m123-,p406-',
                                         baopai:'z2'});
+            player._suanpai._n_zimo -= 4 * 7;
             set_dapai(player, 2, ['m4','m5','m6','p4','p5','p6*']);
             assert.equal(player.select_dapai(), 's8_');
         });
@@ -676,7 +680,7 @@ suite('Player', ()=>{
             set_dapai(player, 2, ['p5*']);
             assert.equal(player.select_dapai(), 's5*');
         });
-        test('リーチ者がいて自身がテンパイしても評価値200未満ならリーチしない', ()=>{
+        test('リーチ者がいて自身がテンパイしても評価値350未満ならリーチしない', ()=>{
             const player = init_player({shoupai:'m22345p123678s79z1',
                                         menfeng:1,baopai:'z1'});
             player.dapai({l:0,p:'s8'})
@@ -844,31 +848,34 @@ suite('Player', ()=>{
         test('和了形の場合は打点を評価値とする', ()=>{
             const player = init_player({shoupai:'m123678p123s1388s2*',
                                         menfeng:1, baopai:'s9'});
-            let paishu = player._suanpai.paishu_all();
+            let paishu = player._suanpai.get_paishu();
             assert.equal(player.eval_shoupai(player.shoupai, paishu), 8000);
         });
         test('テンパイ形の場合は、和了打点×枚数 の総和を評価値とする', ()=>{
             const player = init_player({shoupai:'m123678p123s1388*',
                                         menfeng:1, baopai:'s9'});
-            let paishu = player._suanpai.paishu_all();
-            assert.equal(player.eval_shoupai(player.shoupai, paishu), 32000/12);
+            let paishu = player._suanpai.get_paishu();
+            assert.equal(player.eval_shoupai(player.shoupai, paishu),
+                                                8000 * 4 * (70 / 122) / 8);
         });
         test('打牌可能な牌姿の場合は、打牌後の牌姿の評価値の最大値を評価値とする', ()=>{
             const player = init_player({shoupai:'m123678p123s13488',
                                         menfeng:1, baopai:'s9'});
-            let paishu = player._suanpai.paishu_all();
-            assert.equal(player.eval_shoupai(player.shoupai, paishu), 32000/12);
+            let paishu = player._suanpai.get_paishu();
+            assert.equal(player.eval_shoupai(player.shoupai, paishu),
+                                                8000 * 4 * (70 / 121) / 8);
         });
         test('残り枚数0の牌は評価時に手牌に加えない', ()=>{
             const player = init_player({shoupai:'m34p123456s789z13z3',
                                         menfeng:1, baopai:'m0'});
-            let paishu = player._suanpai.paishu_all();
-            assert.equal(player.eval_shoupai(player.shoupai, paishu), 18900/12);
+            let paishu = player._suanpai.get_paishu();
+            assert.equal(player.eval_shoupai(player.shoupai, paishu),
+                                                2700 * 7 * (70 / 121) / 8);
         });
         test('3シャンテン以上の場合は鳴きを考慮した待ち牌数を評価値とする', ()=>{
             const player = init_player({shoupai:'m569p4s5778z11335',
                                         menfeng:1, baopai:'s9'});
-            let paishu = player._suanpai.paishu_all();
+            let paishu = player._suanpai.get_paishu();
             assert.equal(player.eval_shoupai(player.shoupai, paishu), 61);
         });
     });

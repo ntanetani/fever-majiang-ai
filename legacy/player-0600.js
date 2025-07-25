@@ -1,14 +1,18 @@
-/*!
- *  @kobalab/majiang-ai v1.0.13
- *
- *  Copyright(C) 2021 Satoshi Kobayashi
- *  Released under the MIT license
- *  https://github.com/kobalab/majiang-ai/blob/master/LICENSE
+/*
+ *  思考ルーチン 0600
+ *    - 0400 をベースに以下を修正
+ *      - select_fulou()
+ *      - select_gang()
+ *      - select_dapai()
+ *        - paishu_all() → get_paishu()
+ *      - eval_shoupai()
+ *      - eval_backtrack()
+ *        - 残り枚数の把握に Paishu を使うよう修正
  */
 "use strict";
 
 const Majiang = require('@kobalab/majiang-core');
-const SuanPai = require('./suanpai');
+const SuanPai = require('./suanpai-0600');
 
 const width = [8, 8*4, 8*4*2];
 
@@ -133,7 +137,7 @@ module.exports = class Player extends Majiang.Player {
     select_fulou(dapai, info) {
 
         let n_xiangting = Majiang.Util.xiangting(this.shoupai);
-        if (this._model.shoupai.find(s=>s.lizhi) && n_xiangting >= 3) return;
+        if (this._model.shoupai.find(s=>s.lizhi) && n_xiangting > 1) return;
 
         let d = ['','+','=','-'][(4 + this._model.lunban - this._menfeng) % 4];
         let p = dapai.p.slice(0,2) + d;
@@ -159,7 +163,8 @@ module.exports = class Player extends Majiang.Player {
             for (let m of mianzi) {
                 let shoupai = this.shoupai.clone().fulou(m);
                 let x = Majiang.Util.xiangting(shoupai);
-                if (x >= 3) continue;
+                if (x >= 3 ||
+                    this._model.shoupai.find(s=>s.lizhi) && x > 0) continue;
 
                 let ev = this.eval_shoupai(shoupai, paishu);
 
@@ -168,11 +173,6 @@ module.exports = class Player extends Majiang.Player {
                         m: m, n_xiangting: x, ev: ev,
                         shoupai: shoupai.toString()
                     });
-                }
-
-                if (this._model.shoupai.find(s=>s.lizhi)) {
-                    if (x  > 0 && ev < 750) continue;
-                    if (x == 0 && ev < 250) continue;
                 }
 
                 if (ev - max > 0.0000001) {
@@ -287,18 +287,28 @@ module.exports = class Player extends Majiang.Player {
 
     select_dapai(info) {
 
+        const suan_weixian = (p)=>{
+            let weixian = 0;
+            for (let l = 0; l < 4; l++) {
+                if (l == this._menfeng) continue;
+                if (! this._model.shoupai[l].lizhi) continue;
+                let w = this._suanpai.suan_weixian(p, l);
+                if (w > weixian) weixian = w;
+            }
+            return weixian;
+        };
         let anquan, min = Infinity;
-        const weixian = this._suanpai.suan_weixian_all(this.shoupai._bingpai);
-        if (weixian) {
+        if (this._model.shoupai.find(s => s != this.shoupai && s.lizhi)) {
             for (let p of this.get_dapai(this.shoupai)) {
-                if (weixian(p) < min) {
-                    min = weixian(p);
+                let weixian = suan_weixian(p);
+                if (weixian < min) {
+                    min = weixian;
                     anquan = p;
                 }
             }
         }
 
-        let dapai = anquan, max = -1, min_tingpai = 0, backtrack = [];
+        let dapai, max = -1, min_tingpai = 0, backtrack = [];
         let n_xiangting = Majiang.Util.xiangting(this.shoupai);
         let paishu = this._suanpai.get_paishu();
         const paijia = this._suanpai.make_paijia(this.shoupai);
@@ -309,7 +319,6 @@ module.exports = class Player extends Majiang.Player {
             if (n_xiangting > 2 && this.xiangting(shoupai) > n_xiangting ||
                 Majiang.Util.xiangting(shoupai) > n_xiangting)
             {
-                if (anquan) continue;
                 if (n_xiangting < 2) backtrack.push(p);
                 continue;
             }
@@ -322,27 +331,13 @@ module.exports = class Player extends Majiang.Player {
 
             if (info) {
                 info.map(i =>{ if (i.p == p.slice(0,2) && i.m)
-                                    i.weixian = weixian && weixian(p) });
+                                    i.weixian = suan_weixian(p) });
                 if (! info.find(i => i.p == p.slice(0,2) && ! i.m)) {
                     info.push({
                         p: p.slice(0,2), n_xiangting: n_xiangting, ev: ev,
                         tingpai: tingpai, n_tingpai: n_tingpai,
-                        weixian: weixian && weixian(p)
+                        weixian: anquan ? suan_weixian(p) : null
                     });
-                }
-            }
-
-            if (weixian && weixian(p) > min) {
-                if (weixian(p) >= 13.0) continue;
-                if (n_xiangting > 2 ||  n_xiangting > 0 && ev < 80) {
-                    if (weixian(p) >= 8.0) continue;
-                    if (min < 3.2) continue;
-                }
-                else if (n_xiangting  > 0 && ev < 750 ||
-                         n_xiangting == 0 && ev <  50)
-                {
-                    if (weixian(p) >= 8.0) continue;
-                    if (min < 3.2 && weixian(p) >= 3.2) continue;
                 }
             }
 
@@ -368,7 +363,8 @@ module.exports = class Player extends Majiang.Player {
                 if (! info.find(i => i.p == p.slice(0,2) && ! i.m)) {
                     info.push({
                         p: p.slice(0,2), n_xiangting: n_xiangting + 1, ev: ev,
-                        tingpai: tingpai, n_tingpai: n_tingpai
+                        tingpai: tingpai, n_tingpai: n_tingpai,
+                        weixian: anquan ? suan_weixian(p) : null
                     });
                 }
             }
@@ -380,6 +376,8 @@ module.exports = class Player extends Majiang.Player {
         }
 
         if (anquan) {
+            if (n_xiangting > 1 ||
+                n_xiangting == 1 && suan_weixian(dapai) > 5)  dapai = anquan;
 
             if (info && dapai == anquan
                 && ! info.find(i=> i.p == anquan.slice(0,2)))
@@ -388,12 +386,12 @@ module.exports = class Player extends Majiang.Player {
                     p: anquan.slice(0,2),
                     n_xiangting: Majiang.Util.xiangting(
                                         this.shoupai.clone().dapai(anquan)),
-                    weixian: weixian && weixian(anquan)
+                    weixian: suan_weixian(anquan)
                 });
             }
         }
 
-        if (this.select_lizhi(dapai) && max >= 350) dapai += '*';
+        if (this.select_lizhi(dapai)) dapai += '*';
         return dapai;
     }
 
