@@ -119,13 +119,15 @@ suite('minipaipu', ()=>{
         });
         test('自身の副露を正しく処理すること', ()=>{
             let rv = minipaipu(player, baseinfo('m123s6789z111,p550=//2'),
-                               heinfo('z3///'));
+                               heinfo('m0///'));
             assert.deepEqual(player.model.he[0]._pai, ['p0=']);
             assert.equal(player._suanpai._paishu.p[5], 1);
             assert.equal(player._suanpai._paishu.p[0], 0);
-            assert.deepEqual(player.he._pai, ['z3']);
+            assert.equal(player._suanpai._paishu.m[5], 3);
+            assert.equal(player._suanpai._paishu.m[0], 0);
+            assert.deepEqual(player.he._pai, ['m0']);
             assert.equal(player.shan.paishu, 69);
-            assert.deepEqual(rv, ['z3','','p0=','']);
+            assert.deepEqual(rv, ['m0','','p0=','']);
         });
         test('副露のタイミングを指定できること', ()=>{
             let rv = minipaipu(player, baseinfo('m123p456s6789z111'),
