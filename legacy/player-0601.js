@@ -1,10 +1,21 @@
 /*
- *  Player
+ *  思考ルーチン 0601
+ *    - select_fulou()
+ *      - 閾値Aを超えて超好形となる副露を許可する
+ *      - 副露愚形の閾値(閾値C = 250)を設定
+ *    - select_dapai()
+ *      - 安全牌がない場合はオリない
+ *      - 最善手が押せない場合でも次善の手が押せるのならば押す
+ *      - リーチに押す場合シャンテン戻しを選択しない
+ *      - 超好形の閾値(閾値A = 750)を設定
+ *      - 愚形の閾値(閾値B = 80)を設定
+ *      - 聴牌愚形の閾値(閾値D = 50)を設定
+ *      - 立直愚形の閾値(閾値E = 350)を設定
  */
 "use strict";
 
 const Majiang = require('@kobalab/majiang-core');
-const SuanPai = require('./suanpai');
+const SuanPai = require('./suanpai-0600');
 
 const width = [8, 8*4, 8*4*2];
 
@@ -283,12 +294,24 @@ module.exports = class Player extends Majiang.Player {
 
     select_dapai(info) {
 
+        const suan_weixian = (p)=>{
+            let weixian = 0;
+            for (let l = 0; l < 4; l++) {
+                if (l == this._menfeng) continue;
+                if (! this._model.shoupai[l].lizhi) continue;
+                let w = this._suanpai.suan_weixian(p, l);
+                if (w > weixian) weixian = w;
+            }
+            return weixian;
+        };
         let anquan, min = Infinity;
-        const weixian = this._suanpai.suan_weixian_all(this.shoupai._bingpai);
-        if (weixian) {
+        let weixian;
+        if (this._model.shoupai.find(s => s != this.shoupai && s.lizhi)) {
+            weixian = {};
             for (let p of this.get_dapai(this.shoupai)) {
-                if (weixian(p) < min) {
-                    min = weixian(p);
+                weixian[p] = suan_weixian(p);
+                if (weixian[p] < min) {
+                    min = weixian[p];
                     anquan = p;
                 }
             }
@@ -318,28 +341,21 @@ module.exports = class Player extends Majiang.Player {
 
             if (info) {
                 info.map(i =>{ if (i.p == p.slice(0,2) && i.m)
-                                    i.weixian = weixian && weixian(p) });
+                                    i.weixian = suan_weixian(p) });
                 if (! info.find(i => i.p == p.slice(0,2) && ! i.m)) {
                     info.push({
                         p: p.slice(0,2), n_xiangting: n_xiangting, ev: ev,
                         tingpai: tingpai, n_tingpai: n_tingpai,
-                        weixian: weixian && weixian(p)
+                        weixian: anquan ? suan_weixian(p) : null
                     });
                 }
             }
 
-            if (weixian && weixian(p) > min) {
-                if (weixian(p) >= 13.0) continue;
-                if (n_xiangting > 2 ||  n_xiangting > 0 && ev < 80) {
-                    if (weixian(p) >= 8.0) continue;
-                    if (min < 3.2) continue;
-                }
-                else if (n_xiangting  > 0 && ev < 750 ||
-                         n_xiangting == 0 && ev <  50)
-                {
-                    if (weixian(p) >= 8.0) continue;
-                    if (min < 3.2 && weixian(p) >= 3.2) continue;
-                }
+            if (min < 6) {
+                if (n_xiangting  > 2 &&             weixian[p] > min) continue;
+                if (n_xiangting  > 0 && ev <  80 && weixian[p] > min) continue;
+                if (n_xiangting  > 0 && ev < 750 && weixian[p] >   5) continue;
+                if (n_xiangting == 0 && ev <  50 && weixian[p] >   5) continue;
             }
 
             if (ev - max > 0.0000001) {
@@ -384,7 +400,7 @@ module.exports = class Player extends Majiang.Player {
                     p: anquan.slice(0,2),
                     n_xiangting: Majiang.Util.xiangting(
                                         this.shoupai.clone().dapai(anquan)),
-                    weixian: weixian && weixian(anquan)
+                    weixian: suan_weixian(anquan)
                 });
             }
         }

@@ -1,10 +1,15 @@
 /*
- *  Player
+ *  思考ルーチン 0602
+ *    - select_dapai()
+ *      - 「待ちの形とカベ」を利用した危険度決定方法に修正
+ *      - 超危険牌の閾値(閾値A = 13.0)を設定
+ *      - 危険牌の閾値(閾値B = 8.0)を設定
+ *      - 安全牌の閾値(閾値C = 3.2)を設定
  */
 "use strict";
 
 const Majiang = require('@kobalab/majiang-core');
-const SuanPai = require('./suanpai');
+const SuanPai = require('./suanpai-0602');
 
 const width = [8, 8*4, 8*4*2];
 

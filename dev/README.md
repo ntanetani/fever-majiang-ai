@@ -44,7 +44,7 @@ JSONファイルもしくはJSON形式の文字列で [ルール](https://github
 
 ### 手牌の評価値計算スクリプト
 ```sh
-$ node dev/eval_shoupai.js m123p1234789s3388/0/0/s3
+$ node dev/eval_shoupai.js m123p1234789s3388/0/0/s3/+7
 ```
 [何切る解答機](https://kobalab.net/majiang/dapai.html) のCLI版。
 パラメータは何切る解答機と同じ。
@@ -55,6 +55,7 @@ $ node dev/eval_shoupai.js m123p1234789s3388/0/0/s3
 $ node dev/eval_dapai.js m2309p2489s3579z5p2/0/1/m2 z4z3/z2z5m4,s888=/z2z3m9*/s1z5z6
 ```
 河や副露面子も含めた情報から牌の評価値と牌の危険度を計算し表示します。
+こちらもパラメータは [何切る解答機](https://kobalab.net/majiang/dapai.html) と同様。
 
 
 ## テストケース

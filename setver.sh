@@ -17,7 +17,7 @@ ex package-lock.json <<++
     w!
 ++
 
-ex lib/player.js <<++
+ex lib/index.js <<++
     2s/ v.*/ v${version}/
     w!
 ++

@@ -139,14 +139,27 @@ suite('SuanPai', ()=>{
         });
     });
 
-    suite('paishu_all()', ()=>{
+    suite('get_paishu()', ()=>{
         let suanpai = init_suanpai({shoupai:'m456p406s999z1122',baopai:'z1'});
-        test('牌数を全て返すこと', function(){
-            assert.deepEqual(suanpai.paishu_all(),
-                            {m0:1,m1:4,m2:4,m3:4,m4:3,m5:2,m6:3,m7:4,m8:4,m9:4,
-                             p0:0,p1:4,p2:4,p3:4,p4:3,p5:3,p6:3,p7:4,p8:4,p9:4,
-                             s0:1,s1:4,s2:4,s3:4,s4:4,s5:3,s6:4,s7:4,s8:4,s9:1,
-                                  z1:1,z2:2,z3:4,z4:4,z5:4,z6:4,z7:4});
+        suanpai.zimo({ l: 0, p: 'z3' });
+        let real = {m0:1,m1:4,m2:4,m3:4,m4:3,m5:2,m6:3,m7:4,m8:4,m9:4,
+                    p0:0,p1:4,p2:4,p3:4,p4:3,p5:3,p6:3,p7:4,p8:4,p9:4,
+                    s0:1,s1:4,s2:4,s3:4,s4:4,s5:3,s6:4,s7:4,s8:4,s9:1,
+                         z1:1,z2:2,z3:3,z4:4,z5:4,z6:4,z7:4};
+        let paishu = suanpai.get_paishu();
+        test('見えていない牌数を得られること', function(){
+            for (let p of Object.keys(real)) {
+                assert.equal(paishu.val(p, 1), real[p], p);
+            }
+        });
+        test('ツモ可能な牌数を推定できること', function(){
+            assert.equal(paishu.val('m1'), real.m1 * 69 / 121);
+            assert.equal(paishu.pop('m1').val('m1'), (real.m1 - 1) * 65 / 120);
+            assert.equal(paishu.push('m1').val('m1'), real.m1 * 69 / 121);
+        });
+        test('ツモが尽きたときは0を返すこと', ()=>{
+            paishu._n_zimo = 0;
+            assert.equal(paishu.val('m1'), 0);
         });
     });
 
@@ -220,113 +233,113 @@ suite('SuanPai', ()=>{
         let suanpai = new SuanPai({m:1,p:1,s:1});
         test('現物: 0', ()=>{
             suanpai.dapai({l:1,p:'z1'});
-            assert.equal(suanpai.suan_weixian('z1', 1), 0);
+            assert.equal(suanpai.suan_weixian('z1', 1, 0), 0);
         })
         test('字牌 生牌: 8', ()=>{
-            assert.equal(suanpai.suan_weixian('z2', 1), 8);
+            assert.equal(suanpai.suan_weixian('z2', 1, 0), 8);
             suanpai.zimo({l:0,p:'z3'});
             assert.equal(suanpai.suan_weixian('z3', 1, 1), 8);
         });
         test('字牌 1枚見え: 3', ()=>{
             suanpai.dapai({l:2,p:'z2'});
-            assert.equal(suanpai.suan_weixian('z2', 1), 3);
+            assert.equal(suanpai.suan_weixian('z2', 1, 0), 3);
             suanpai.dapai({l:3,p:'z3'});
-            assert.equal(suanpai.suan_weixian('z3', 1, 1), 3);
+            assert.equal(suanpai.suan_weixian('z3', 1), 3);
         });
         test('字牌 2枚見え: 1', ()=>{
             suanpai.dapai({l:2,p:'z2'});
-            assert.equal(suanpai.suan_weixian('z2', 1), 1);
+            assert.equal(suanpai.suan_weixian('z2', 1, 0), 1);
             suanpai.dapai({l:3,p:'z3'});
-            assert.equal(suanpai.suan_weixian('z3', 1, 1), 1);
+            assert.equal(suanpai.suan_weixian('z3', 1), 1);
         });
         test('字牌 ラス牌: 0', ()=>{
             suanpai.dapai({l:2,p:'z2'});
-            assert.equal(suanpai.suan_weixian('z2', 1), 0);
+            assert.equal(suanpai.suan_weixian('z2', 1, 0), 0);
             suanpai.dapai({l:3,p:'z3'});
-            assert.equal(suanpai.suan_weixian('z3', 1, 1), 0);
+            assert.equal(suanpai.suan_weixian('z3', 1), 0);
         });
         test('字牌 なし: 0', ()=>{
             suanpai.dapai({l:2,p:'z2'});
-            assert.equal(suanpai.suan_weixian('z2', 1), 0);
+            assert.equal(suanpai.suan_weixian('z2', 1, 0), 0);
             suanpai.dapai({l:0,p:'z3'});
-            assert.equal(suanpai.suan_weixian('z3', 1, 1), 0);
+            assert.equal(suanpai.suan_weixian('z3', 1), 0);
         });
         test('数牌 無スジ(一九牌): 13', ()=>{
-            assert.equal(suanpai.suan_weixian('m1', 1), 13);
-            assert.equal(suanpai.suan_weixian('m9', 1), 13);
+            assert.equal(suanpai.suan_weixian('m1', 1, 0), 13);
+            assert.equal(suanpai.suan_weixian('m9', 1, 0), 13);
         });
         test('数牌 無スジ(二八牌): 16', ()=>{
-            assert.equal(suanpai.suan_weixian('m2', 1), 16);
-            assert.equal(suanpai.suan_weixian('m8', 1), 16);
+            assert.equal(suanpai.suan_weixian('m2', 1, 0), 16);
+            assert.equal(suanpai.suan_weixian('m8', 1, 0), 16);
         });
         test('数牌 無スジ(三七牌): 19', ()=>{
-            assert.equal(suanpai.suan_weixian('m3', 1), 19);
-            assert.equal(suanpai.suan_weixian('m7', 1), 19);
+            assert.equal(suanpai.suan_weixian('m3', 1, 0), 19);
+            assert.equal(suanpai.suan_weixian('m7', 1, 0), 19);
         });
         test('数牌 無スジ(四五六牌): 26', ()=>{
-            assert.equal(suanpai.suan_weixian('m4', 1), 26);
-            assert.equal(suanpai.suan_weixian('m5', 1), 26);
-            assert.equal(suanpai.suan_weixian('m6', 1), 26);
+            assert.equal(suanpai.suan_weixian('m4', 1, 0), 26);
+            assert.equal(suanpai.suan_weixian('m5', 1, 0), 26);
+            assert.equal(suanpai.suan_weixian('m6', 1, 0), 26);
         });
         test('数牌 スジ(一九牌): 3', ()=>{
             suanpai.dapai({l:1,p:'m4'});
-            assert.equal(suanpai.suan_weixian('m1', 1), 3);
+            assert.equal(suanpai.suan_weixian('m1', 1, 0), 3);
             suanpai.dapai({l:1,p:'m6'});
-            assert.equal(suanpai.suan_weixian('m9', 1), 3);
+            assert.equal(suanpai.suan_weixian('m9', 1, 0), 3);
         });
         test('数牌 スジ(二八牌): 6', ()=>{
             suanpai.dapai({l:1,p:'m5'});
-            assert.equal(suanpai.suan_weixian('m2', 1), 6);
-            assert.equal(suanpai.suan_weixian('m8', 1), 6);
+            assert.equal(suanpai.suan_weixian('m2', 1, 0), 6);
+            assert.equal(suanpai.suan_weixian('m8', 1, 0), 6);
         });
         test('数牌 スジ(三七牌): 9', ()=>{
-            assert.equal(suanpai.suan_weixian('m3', 1), 9);
-            assert.equal(suanpai.suan_weixian('m7', 1), 9);
+            assert.equal(suanpai.suan_weixian('m3', 1, 0), 9);
+            assert.equal(suanpai.suan_weixian('m7', 1, 0), 9);
         });
         test('数牌 片スジ(四五六牌): 16', ()=>{
             suanpai.dapai({l:1,p:'p1'});
-            assert.equal(suanpai.suan_weixian('p4', 1), 16);
+            assert.equal(suanpai.suan_weixian('p4', 1, 0), 16);
             suanpai.dapai({l:1,p:'p2'});
-            assert.equal(suanpai.suan_weixian('p5', 1), 16);
+            assert.equal(suanpai.suan_weixian('p5', 1, 0), 16);
             suanpai.dapai({l:1,p:'p3'});
-            assert.equal(suanpai.suan_weixian('p6', 1), 16);
+            assert.equal(suanpai.suan_weixian('p6', 1, 0), 16);
         });
         test('数牌 両スジ(四五六牌): 6', ()=>{
             suanpai.dapai({l:1,p:'p7'});
-            assert.equal(suanpai.suan_weixian('p4', 1), 6);
+            assert.equal(suanpai.suan_weixian('p4', 1, 0), 6);
             suanpai.dapai({l:1,p:'p8'});
-            assert.equal(suanpai.suan_weixian('p0', 1), 6);
+            assert.equal(suanpai.suan_weixian('p0', 1, 0), 6);
             suanpai.dapai({l:1,p:'p9'});
-            assert.equal(suanpai.suan_weixian('p6', 1), 6);
+            assert.equal(suanpai.suan_weixian('p6', 1, 0), 6);
         });
         test('数牌 五のカベ 三七牌: 9', ()=>{
             suanpai.gang({l:2,m:'s5550'});
-            assert.equal(suanpai.suan_weixian('s3', 1), 9);
-            assert.equal(suanpai.suan_weixian('s7', 1), 9);
+            assert.equal(suanpai.suan_weixian('s3', 1, 0), 9);
+            assert.equal(suanpai.suan_weixian('s7', 1, 0), 9);
         });
         test('数牌 五のカベ 四六牌: 13', ()=>{
-            assert.equal(suanpai.suan_weixian('s4', 1), 13);
-            assert.equal(suanpai.suan_weixian('s6', 1), 13);
+            assert.equal(suanpai.suan_weixian('s4', 1, 0), 13);
+            assert.equal(suanpai.suan_weixian('s6', 1, 0), 13);
         });
         test('数牌 二のカベ 生牌: 3', ()=>{
             suanpai.gang({l:2,m:'s2222'});
-            assert.equal(suanpai.suan_weixian('s1', 1), 3);
+            assert.equal(suanpai.suan_weixian('s1', 1, 0), 3);
         });
         test('数牌 二のカベ 1枚見え: 3', ()=>{
             suanpai.dapai({l:2,p:'s1'});
-            assert.equal(suanpai.suan_weixian('s1', 1), 3);
+            assert.equal(suanpai.suan_weixian('s1', 1, 0), 3);
         });
         test('数牌 二のカベ 2枚見え: 1', ()=>{
             suanpai.dapai({l:2,p:'s1'});
-            assert.equal(suanpai.suan_weixian('s1', 1), 1);
+            assert.equal(suanpai.suan_weixian('s1', 1, 0), 1);
         });
         test('数牌 二のカベ ラス牌: 0', ()=>{
             suanpai.dapai({l:2,p:'s1'});
-            assert.equal(suanpai.suan_weixian('s1', 1), 0);
+            assert.equal(suanpai.suan_weixian('s1', 1, 0), 0);
         });
         test('数牌 二のカベ なし: 0', ()=>{
             suanpai.dapai({l:2,p:'s1'});
-            assert.equal(suanpai.suan_weixian('s1', 1), 0);
+            assert.equal(suanpai.suan_weixian('s1', 1, 0), 0);
         });
     });
 
@@ -346,7 +359,7 @@ suite('SuanPai', ()=>{
             suanpai.dapai({l:0,p:'p3*'});
             const weixian = suanpai.suan_weixian_all(shoupai._bingpai);
             assert.equal(weixian('m0'), Math.max(26 / 515 * 100,
-                                                 26 / 544 * 100 * 1.40))
+                                                 26 / 544 * 100 * 1.50))
         });
         test('全ての牌が安全', ()=>{
             let i = 0;

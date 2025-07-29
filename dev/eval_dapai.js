@@ -4,16 +4,33 @@
 "use strict";
 
 const Majiang = require('@kobalab/majiang-core');
+const minipaipu = require('../lib/minipaipu');
 
 function weixian_all(player) {
-    const weixian = player._suanpai.suan_weixian_all(
-                                            player.shoupai._bingpai);
+    function suan_weixian_all() {
+        if (! player._model.shoupai.find(shoupai =>
+                        shoupai != player.shoupai && shoupai.lizhi)) return;
+        return function(p) {
+            let max = 0;
+            for (let l = 0; l < 4; l++) {
+                if (l == player._menfeng) continue;
+                if (! player._model.shoupai[l].lizhi) continue;
+                let w = player._suanpai.suan_weixian(p, l);
+                if (w > max) max = w;
+            }
+            return max;
+        }
+    }
+    const weixian = player._suanpai.suan_weixian_all
+                        ? player._suanpai.suan_weixian_all(
+                                            player.shoupai._bingpai)
+                        : suan_weixian_all();
     if (! weixian) return '-';
     let rv = {};
     for (let s of ['m','p','s','z']) {
         rv[s] = [];
-        for (let n = 1; n <= 9; n++) {
-            rv[s][n] = (weixian(s+n) * 10)|0;
+        for (let n = 1; n <= (s == 'z' ? 7 : 9); n++) {
+            rv[s][n] = + weixian(s+n).toFixed(2);
         }
     }
     return rv;
@@ -21,19 +38,11 @@ function weixian_all(player) {
 
 const yargs = require('yargs');
 const argv = yargs
-    .usage('Usage: $0 牌姿/場風/自風/ドラ/赤牌有無 河情報...')
+    .usage('Usage: $0 牌姿/場風/自風/ドラ/赤牌有無[/+巡目] [ 河情報... ]')
     .option('verbose', { alias: 'v', boolean: true })
     .option('legacy', { alias: 'l' })
     .demandCommand(1)
     .argv;
-
-let [ paistr,
-      zhuangfeng, menfeng, baopai, hongpai ] = (''+argv._[0]).split(/\//);
-
-zhuangfeng = +(zhuangfeng || 0);
-menfeng    = +(menfeng || 0);
-
-baopai  = (baopai||'').split(/,/);
 
 let legacy = argv.legacy ?? '';
 const Player = legacy.match(/^\d{4}$/)
@@ -41,110 +50,34 @@ const Player = legacy.match(/^\d{4}$/)
                         : require('../');
 const player = new Player();
 
-const rule = hongpai == 0 ? Majiang.rule({'赤牌':{m:0,p:0,s:0}})
-                          : Majiang.rule({'赤牌':{m:1,p:1,s:1}});
-player.kaiju({ id:0, rule:rule, title:'', player:[], qijia:0 });
+let xun, param = argv._[0].split(/\//);
+if (param[param.length - 1][0] == '+' ) xun = param.pop();
+let [ paistr, zhuangfeng, menfeng, baopai, hongpai ] = param;
 
-let qipai = {
-    zhuangfeng: zhuangfeng,
-    jushu:      [0,3,2,1][menfeng],
-    changbang:  0,
-    lizhibang:  0,
-    defen:      [25000,25000,25000,25000],
-    baopai:     baopai.shift() || 'z2',
-    shoupai:    ['','','','']
-};
-qipai.shoupai[menfeng] = paistr;
-player.qipai(qipai);
+zhuangfeng = +zhuangfeng||0;
+menfeng    = +menfeng||0;
+baopai     = (baopai||'z1').split(/,/);
+hongpai    = ! hongpai;
+xun        = +xun||0;
 
-for (let p of baopai) player.kaigang({ baopai: p });
+let baseinfo = { paistr: paistr, zhuangfeng: zhuangfeng, menfeng: menfeng,
+                 baopai: baopai, hongpai: hongpai, xun: xun };
 
-let dapai;
-if (argv._[1]) {
-
-    let pai = argv._[1].split(/\//);
-    let he = [], fulou = [];
-    for (let i = 0; i < 4; i++) {
-        let l = (menfeng + i) % 4;
-        fulou[l] = (pai[i]||'').split(/,/);
-        he[l] = fulou[l].shift().match(/[mpsz]\d[_\*\+\=\-\^]*/g) || [];
-    }
-    fulou[menfeng] = player.shoupai._fulou;
-    for (let l = 0; l < 4; l++) {
-        for (let m of fulou[l]) {
-            let d = {'+': 1, '=': 2, '-':3 }[(m.match(/[\+\=\-]/)||[])[0]];
-            if (d) {
-                let p = m[0] + m.match(/\d[\+\=\-]/);
-                let i = he[(l+d)%4].map(p=>p.replace(/[_\*]/,'')).indexOf(p);
-                if (i < 0) {
-                    he[(l+d)%4].unshift(`${p},${m}`);
-                }
-                else {
-                    he[(l+d)%4][i] += `,${m.substr(0,5)}`;
-                    if (m.length == 6) {
-                        let p = m[0] + m.substr(-1) + '^';
-                        let j = he[l].indexOf(p);
-                        if (j < 0) he[(l+d)%4][i] += m.substr(-1);
-                        else       he[l][j] = `^,${m}`;
-                    }
-                }
-            }
-            else {
-                let p = m.substr(0,2) + '^';
-                let i = he[l].indexOf(p);
-                if (i < 0) he[l].unshift(`^,${m}`);
-                else       he[l][i] = `^,${m}`;
-            }
-        }
-    }
-    if (argv.verbose) console.log(he);
-
-    let l = 0;
-    while (he.map(h=>h.length).find(l=>l)) {
-        if (! he[l].length) { l = (l + 1) % 4; continue }
-        let [ p, m ] = he[l].shift().split(/,/);
-        p = p.replace(/[\+\=\-]$/,'');
-        if (argv.verbose) console.log(l, p, m||'');
-
-        player._model.lunban = l;
-
-        if (p == '^') {
-            player._suanpai.gang({ l: l, m: m });
-            continue;
-        }
-        else {
-            player._suanpai.zimo({ l: l, p: p });
-            player._suanpai.dapai({ l: l, p: p });
-            dapai = { l: l, p: p };
-        }
-        if (m) {
-            let d = {'+': 1, '=': 2, '-': 3}[(m.match(/[\+\=\-]/)||[])[0]] || 0;
-            l = (l + 4 - d) % 4;
-            if (l == menfeng) player._suanpai._paishu[p[0]][p[1]]++;
-            player._suanpai.fulou({ l: l, m: m.substr(0,5) });
-            if (m.length == 6) {
-                player._suanpai.gang({ l: l, m: m });
-            }
-            player._model.lunban = l;
-            dapai = null;
-        }
-        else {
-            l = (l + 1) % 4;
-        }
-    }
-}
+if (argv._[1]) minipaipu(player, baseinfo, argv._[1].split(/\//));
+else           minipaipu(player, baseinfo);
 
 let info = [];
 const cmp = (a, b)=> a.selected ? -1
                    : b.selected ?  1
                    : b.ev - a.ev;
+
 if (player.shoupai.get_dapai()) {
 
     let m;
     if (player.shoupai.get_gang_mianzi()) m = player.select_gang(info);
     if (m) info.forEach(i=>{ if (i.m == m) i.selected = true });
     let p = player.select_dapai(info);
-    if (! m) info.forEach(i=>{ if (i.p == p) i.selected = true });
+    info.forEach(i=>{ if (i.p == p.slice(0,2)) i.selected = true });
 
     for (let r of info.sort(cmp)) {
         console.log(
@@ -157,9 +90,13 @@ if (player.shoupai.get_dapai()) {
         );
     }
 }
-else if (dapai) {
+else {
 
-    player.select_fulou(dapai, info);
+    let l = player.model.lunban;
+    if (l != -1) {
+        let p = player.model.he[l]._pai.slice(-1)[0];
+        player.select_fulou({ l: l, p: p }, info);
+    }
 
     for (let r of info.sort(cmp)) {
         console.log(
