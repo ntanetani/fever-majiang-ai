@@ -33,8 +33,9 @@ function select_dapai(player, shoupai, paishu) {
                 p:       p,
                 shoupai: new_shoupai.toString(),
                 tingpai: tingpai.join(','),
-                n:       add_hongpai(tingpai).map(_=>paishu[_])
-                                             .reduce((x,y)=> x + y, 0)
+                n:       add_hongpai(tingpai)
+                            .map(_ => paishu.val ? paishu.val(_,1) : paishu[_])
+                            .reduce((x,y)=> x + y, 0)
             };
         }
     }
@@ -63,15 +64,17 @@ function get_fulou(player, shoupai, p, paishu) {
 
 const yargs = require('yargs');
 const argv = yargs
-    .usage('Usage: $0 牌姿/場風/自風/ドラ/赤牌有無 捨て牌...')
+    .usage('Usage: $0 牌姿/場風/自風/ドラ/赤牌有無/[+巡目] [ 捨て牌... ]')
     .option('silent', { alias: 's', boolean: true })
     .option('legacy', { alias: 'l' })
     .demandCommand(1)
     .argv;
 
-let [ paistr,
-      zhuangfeng, menfeng, baopai, hongpai ] = (''+argv._[0]).split(/\//);
+let xun, param = (''+argv._[0]).split(/\//);
+if (param.length && param[param.length - 1][0] == '+') xun = param.pop();
+let [ paistr, zhuangfeng, menfeng, baopai, hongpai ] = param;
 
+xun = +xun || 7;
 baopai = (baopai||'').split(/,/);
 
 let legacy = argv.legacy ?? '';
@@ -106,8 +109,11 @@ if (argv._[1]) {
         }
     }
 }
+player._suanpai._n_zimo = 69 - (xun - 1) * 4 - (menfeng||0);
 
-let paishu = player._suanpai.paishu_all();
+let paishu = player._suanpai.get_paishu
+                ? player._suanpai.get_paishu()
+                : player._suanpai.paishu_all();
 let n_xiangting = Majiang.Util.xiangting(player.shoupai);
 
 console.log(n_xiangting,
@@ -164,18 +170,20 @@ if (dapai) {
 }
 else {
     for (let p of add_hongpai(Majiang.Util.tingpai(player.shoupai))) {
-        if (paishu[p] == 0) continue;
-        paishu[p]--;
+        if ((paishu.val ? paishu.val(p) : paishu[p]) == 0) continue;
+        paishu.pop ? paishu.pop(p) : paishu[p]--;
 
         let shoupai = player.shoupai.clone().zimo(p);
 
         if (n_xiangting == 0) {
-            console.log(p, paishu[p]+1, player.get_defen(shoupai));
+            console.log(p, paishu.val ? paishu.val(p,1)+1 : paishu[p]+1,
+                        player.get_defen(shoupai));
             continue;
         }
 
         let rv = select_dapai(player, shoupai, paishu);
-        console.log(p, paishu[p]+1, rv.ev, rv.p, rv.shoupai, rv.tingpai, rv.n);
+        console.log(p, paishu.val ? paishu.val(p,1)+1 : paishu[p]+1,
+                    rv.ev, rv.p, rv.shoupai, rv.tingpai, rv.n);
 
         rv = get_fulou(player, player.shoupai, p+'+', paishu);
         if (rv) console.log(p, '+', rv.ev, rv.p, rv.shoupai, rv.tingpai, rv.n);
@@ -183,6 +191,6 @@ else {
         rv = get_fulou(player, player.shoupai, p+'-', paishu);
         if (rv) console.log(p, '-', rv.ev, rv.p, rv.shoupai, rv.tingpai, rv.n);
 
-        paishu[p]++;
+        paishu.push ? paishu.push(p) : paishu[p]++;
     }
 }
